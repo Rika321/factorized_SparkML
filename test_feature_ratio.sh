@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #############################################################################################
 python cdata.py test01 1 400 1000000 10
+hdfs dfs -mkdir /test_data
 hdfs dfs -mkdir /test_data/test01
 hadoop fs -put ./test_data/test01/test01_table_s.csv /test_data/test01
 hadoop fs -put ./test_data/test01/test01_table_r.csv /test_data/test01
