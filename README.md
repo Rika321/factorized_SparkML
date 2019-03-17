@@ -1,4 +1,4 @@
-# factorized_SparkML \n
+# factorized_SparkML 
 Simple python implementation of Factorized Generalized Linear Models in SparkML. 
 
 feel free to edit test_feature_ratio.sh 
