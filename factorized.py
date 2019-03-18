@@ -14,7 +14,7 @@ from pyspark.ml.linalg import Vector as MLVector, Vectors as MLVectors
 from pyspark.mllib.linalg import Vector as MLLibVector, Vectors as MLLibVectors
 from pyspark.mllib.regression import  LabeledPoint
 spark = SparkSession.builder \
-        .master("local") \
+        .master("local[*]") \
         .appName("Word Count") \
         .config("spark.some.config.option", "some-value") \
         .getOrCreate()
@@ -28,7 +28,7 @@ import numpy as np
 from collections import defaultdict
 import argparse
 
-def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_step = 5):
+def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_step = 5, rep_ratio = 8):
     def data_pre_process(s_file, r_file):
         table_s = spark.read.csv(s_file, inferSchema = True, header = True, sep = ",")
         table_r = spark.read.csv(r_file, inferSchema = True, header = True, sep = ",")
@@ -87,6 +87,11 @@ def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_ste
     #processing data
     Sdata_rdd, Rdata_rdd, feat_size_s, feat_size_r,Sdata_size = data_pre_process(s_file, r_file)
 
+    #repartition_ratio
+    prev_p =Sdata_rdd.getNumPartitions()
+    Sdata_rdd = Sdata_rdd.repartition(rep_ratio)
+
+
     #initialize parameters
     W_S     = np.zeros(feat_size_s)
     W_R     = np.zeros(feat_size_r)
@@ -97,6 +102,7 @@ def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_ste
     W_R_bc     = sc.broadcast(W_R)
     num_fk_bc  = sc.broadcast(num_fk)
     #iter_
+    
     for i in range (iter_):
         Rdata_result = Rdata_rdd.map(read_table_R).collect()
         for ele in Rdata_result:
@@ -122,8 +128,8 @@ def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_ste
         W_S_bc     = sc.broadcast(W_S)
         W_R_bc     = sc.broadcast(W_R)
 
-        if i%display_step == 0:
-            print(str(i)+" step loss:", loss)
+        # if i%display_step == 0:
+        #     print(str(i)+" step loss:", loss)
     return np.concatenate((W_S, W_R), axis=0)
 
 
@@ -131,6 +137,7 @@ def factorized_linear_regression(s_file, r_file, Learn_rate , iter_, display_ste
 parser = argparse.ArgumentParser()
 parser.add_argument("name")
 parser.add_argument("iter")
+parser.add_argument("part_ratio")
 
 
 args = parser.parse_args()
@@ -146,10 +153,11 @@ r_file = dl_path+r_table_name
 
 Learn_rate = 0.01
 iter_ = int(args.iter)
+part_ratio = int(args.part_ratio)
 display_step = 5
 
 start_time = time.time()
-W = factorized_linear_regression(s_file, r_file, Learn_rate, iter_, display_step)
+W = factorized_linear_regression(s_file, r_file, Learn_rate, iter_, display_step, part_ratio)
 elapsed_time = time.time() - start_time
 print("factorized ML done:", elapsed_time)
 
