@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 #############################################################################################
+<<<<<<< HEAD
 hdfs dfs -rm -r /test_data
 hdfs dfs -mkdir /test_data
 python cdata.py test01 50 400 1000000 10
+=======
+python cdata.py test01 1 400 1000000 10
+hdfs dfs -mkdir /test_data
+>>>>>>> 134af8797dedd000c548e9faa8c482b43d45cad6
 hdfs dfs -mkdir /test_data/test01
 hadoop fs -put ./test_data/test01/test01_table_s.csv /test_data/test01
 hadoop fs -put ./test_data/test01/test01_table_r.csv /test_data/test01
